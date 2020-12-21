@@ -1,4 +1,5 @@
-import { createStore } from "vuex"
+import { createStore } from 'vuex'
+import items from "./Items.js"
 
 let Store = createStore({
     state() {
@@ -11,6 +12,7 @@ let Store = createStore({
 
     },
     modules: {
+        items: items
     }    
 });
 
