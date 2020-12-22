@@ -1,6 +1,6 @@
 <template>
     <div>
-        Active Searches
+        
     </div>
 </template>
 
