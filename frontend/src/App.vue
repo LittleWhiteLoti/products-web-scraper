@@ -2,21 +2,25 @@
   <div>
     <header>
     </header>
-    <nav>
-      <router-link to="/create-item-search">Create Item Search</router-link>
-      <router-link to="/active-searches">Active Searches</router-link>
-      <router-link to="/paused-searches">Paused Searches</router-link>
-      <router-link to="/removed-searches">Removed Searches</router-link>
-    </nav>
+    <div id="main-nav">
+      <input id="dropdown-drawer" type="checkbox" >
+      <label id="open-drawer" for="dropdown-drawer">
+        ...
+      </label>
+      <label id="close-drawer" for="dropdown-drawer">
+        Close drawer
+      </label>
+      <nav id="drawer">
+        <router-link to="/create-item-search">Create Item Search</router-link>
+        <router-link to="/active-searches">Active Searches</router-link>
+        <router-link to="/paused-searches">Paused Searches</router-link>
+        <span class="flex-break"></span>
+        <router-link to="/removed-searches">Removed Searches</router-link>
+        <router-link to="/global-configurations">Global Configurations</router-link>
+      </nav>
+    </div>
     <main>
-      <template v-if="ActiveComponent== 'active-searches'">
-        <keep-alive>
-          <component :is="ActiveComponent"></component>
-        </keep-alive>
-      </template>
-      <template v-else>
-        <component :is="ActiveComponent"></component>
-      </template>
+      <component :is="ActiveComponent"></component>
     </main>
   </div>
 </template>
@@ -42,9 +46,16 @@ export default {
     });
 
     return {
-      ActiveComponent
+      ActiveComponent,
     }
   },
+  data() {
+
+    return {
+    }
+  },
+  methods: {
+  }
 }
 </script>
 
@@ -60,6 +71,7 @@ export default {
   }
 
 </style>
+
 <style scoped>
 
   header {
@@ -68,10 +80,19 @@ export default {
     height: 38px;
   }
 
+  label[for="dropdown-drawer"] {
+    display: none;
+  }
+
+  #dropdown-drawer {
+    display: none;
+  }
+
   nav {
-    width: 1024px;
-    margin: 4px auto 12px auto;
+    width: 950px;
+    margin: 4px auto 0 auto;
     display: flex;
+    flex-wrap: wrap;
   }
 
   nav a {
@@ -84,6 +105,7 @@ export default {
     color: #FFFFFF;
     text-align: center;
     padding: 6px 0;
+    display: block;
   }
   
   nav a:first-child {
@@ -101,14 +123,112 @@ export default {
     text-decoration: none;
   }
 
+  .flex-break {
+    display: none;
+  }
+
   .router-link-active {
     background-color: #005500;
     color: #BBBBBB;
   }
 
   main {
-    width: 1024px;
+    width: 950px;
     margin: auto auto;
+  }
+
+  @media screen and (max-width: 1024px) {
+
+    nav {
+      width: 100%;
+    }
+
+    nav a, nav a:first-child, nav a:last-child {
+      border-radius: 0;
+    }
+    
+    main {
+      width: 100%;
+    }
+
+    .flex-break {
+      flex-basis: 100%;
+      height: 0;
+      display: initial;
+    }
+  }
+
+  @media screen and (max-width: 550px) {
+
+    .flex-break {
+      display: none;
+    }
+
+    #main-nav {
+      display: flex;
+      flex-direction: column;
+      z-index: 2;
+      position: absolute;
+      width: 100%;
+      background-color: #FFFFFF;
+    }
+
+    nav {
+      margin: 0;
+    }
+
+    nav a {
+      flex-basis: 100%;     
+    }
+
+    nav a:first-child {
+      border-top: 0;
+    }
+
+    #dropdown-drawer ~ #open-drawer {
+      display: block;
+    }
+
+    #dropdown-drawer:checked ~ #open-drawer {
+      display: none;
+    }
+
+    #open-drawer {
+      order: 1;
+      padding: 0 0 16px 0;
+      font-weight: bold;
+      font-size: 24px;
+      text-align: center;
+    }
+
+    #drawer {
+      order: 2;
+    }
+
+    #close-drawer {
+      order: 3;
+    }
+
+    #dropdown-drawer ~ #close-drawer {
+      display: none;
+    }
+
+    #dropdown-drawer:checked ~ #close-drawer {
+      display: block;
+    }
+
+    #dropdown-drawer ~ #drawer {
+      display: none;
+    }
+
+    #dropdown-drawer:checked ~ #drawer {
+      display: block;
+    }
+
+    main {
+      margin: 24px 0 0 0;
+    }
+ 
   }
 
 </style>
