@@ -18,8 +18,8 @@ export default {
         let items = [
             { "name": "Ryzen 5950x",
                 "image": "Not Available",
-                "lowBuyPrice": "700",
-                "highBuyPrice": "1000",
+                "lowestBuyPrice": "700",
+                "highestBuyPrice": "1000",
                 "notifyWhenAvailable": [], 
                 "sellers": {
                     "Amazon": {

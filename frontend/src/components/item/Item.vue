@@ -1,5 +1,11 @@
 <template>
-    <div>
+    <div v-if="parentComponent == 'active-searches'">
+    </div>
+    <div v-else-if="parentComponent == 'paused-searches'">
+    </div>
+    <div v-else-if="parentComponent == 'removed-searches'">
+    </div>
+    <div v-else-if="parentComponent == 'create-search-item'">
         <div id="item-frame">
             <form id="item-form" @submit.prevent="validateItem">
                 <div id="item-image-preview-container">
@@ -31,34 +37,20 @@ export default {
             type: String,
             required: true
         },
-        image: {
-            type: String,
-            required: false
-        },
-        itemName: {
-            type: String,
+        item: {
+            type: Object,
             required: true
-        },
-        lowestBuyPrice: {
-            type: Number,
-            required: true
-        },
-        highestBuyPrice: {
-            type: Number,
-            required: true
-        },
-        checkIntervals: {
-            type: String,
-            required: true
-        },
-        activelySearching: {
-            type: Boolean,
-            required: false
-        },
-        sellers: Array
+        } 
     },
     data() {
-        return {}
+        return {
+            name: this.$props.item.name,
+            image: this.$props.item.image,
+            lowestBuyPrice: this.$props.item.lowestBuyPrice,
+            highestBuyPrice: this.$props.item.highestBuyPrice,
+            notifyWhenAvailable: this.$props.item.notifyWhenAvailable,
+            sellers: this.$props.item.sellers
+        }
     },
     methods: {
         validateItem: () => {
