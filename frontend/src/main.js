@@ -4,7 +4,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Store from './assets/MainModules/AppStore.js'
 import GlobalConfigurations from './components/configurations/GlobalConfigurations.vue'
 import ListItems from './components/list/ListItems.vue'
-import Item from './components/item/Item.vue'
+import ViewItem from './components/item/ViewItem.vue'
+import CreateItem from './components/item/CreateItem.vue'
+import EditItem from './components/item/EditItem.vue'
 import CreateItemSearch from './components/searches/CreateItemSearch.vue'
 import ActiveSearches from './components/searches/ActiveSearches.vue'
 import PausedSearches from './components/searches/PausedSearches.vue'
@@ -17,7 +19,9 @@ app.use(Store);
 // Register as global components
 app.component('global-configurations', GlobalConfigurations);
 app.component('list-items', ListItems);
-app.component('item', Item);
+app.component('view-item', ViewItem);
+app.component('create-item', CreateItem);
+app.component('edit-item', EditItem);
 app.component('create-item-search', CreateItemSearch);
 app.component('active-searches', ActiveSearches);
 app.component('paused-searches', PausedSearches);

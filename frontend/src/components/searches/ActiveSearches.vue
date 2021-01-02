@@ -12,7 +12,7 @@ export default {
     data() {
 
         let parentComponent = "active-searches";
-        /*
+
         let items = [
             { "name": "Ryzen 5950x Ryzen 5950x Ryzen 5950x",
                 "lowestBuyPrice": "700",
@@ -85,8 +85,8 @@ export default {
                 }]
             }
         ];
-        */
-        let items = [];
+
+        //let items = [];
 
         return {
             parentComponent,

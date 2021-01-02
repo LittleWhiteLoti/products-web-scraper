@@ -1,6 +1,6 @@
 <template>
     <div id="active-searches-list" v-if="parentComponent == 'active-searches'">
-        <item v-for="item in items" :item="item" :parentComponent="parentComponent" :key="item.name"></item>
+        <view-item v-for="item in items" :item="item" :parentComponent="parentComponent" :key="item.name"></view-item>
     </div>
     <div v-else-if="parentComponent == 'paused-searches'">
     </div>
