@@ -1,7 +1,6 @@
 <template>
-    <div class="active-seaches-list" v-if="parentComponent == 'active-searches'">
-        <item v-for="item in items" :item="item" :parentComponent="parentComponent" :key="item.name">
-        </item>
+    <div id="active-searches-list" v-if="parentComponent == 'active-searches'">
+        <item v-for="item in items" :item="item" :parentComponent="parentComponent" :key="item.name"></item>
     </div>
     <div v-else-if="parentComponent == 'paused-searches'">
     </div>
@@ -25,9 +24,11 @@ export default {
 
 <style scoped>
 
-    .active-searches-list {
+    #active-searches-list {
+        margin-top: 8px;
         display: flex;
-        flex-wrap: wrap;
+        flex-flow: row wrap;
+        align-items: flex-start;
     }
 
 </style>

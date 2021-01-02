@@ -70,6 +70,14 @@ export default {
     font-family: Arial, Helvetica, sans-serif;
   }
 
+  a {
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    -moz-user-select: none;
+    -o-user-select: none;
+  }
+
 </style>
 
 <style scoped>
