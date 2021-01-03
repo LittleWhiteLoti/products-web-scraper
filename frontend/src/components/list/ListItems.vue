@@ -25,7 +25,6 @@ export default {
 <style scoped>
 
     #active-searches-list {
-        margin-top: 8px;
         display: flex;
         flex-flow: row wrap;
         align-items: flex-start;

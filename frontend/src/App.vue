@@ -112,6 +112,7 @@ export default {
     border-bottom: 1px solid #004400;
     color: #FFFFFF;
     text-align: center;
+    text-decoration: none;
     padding: 6px 0;
     display: block;
   }
@@ -127,10 +128,6 @@ export default {
     border-bottom-right-radius: 3px;
   }
 
-  nav a {
-    text-decoration: none;
-  }
-
   .flex-break {
     display: none;
   }
@@ -142,7 +139,7 @@ export default {
 
   main {
     width: 950px;
-    margin: auto auto;
+    margin: 8px auto 0 auto;
   }
 
   @media screen and (max-width: 1024px) {
@@ -234,7 +231,7 @@ export default {
     }
 
     main {
-      margin: 24px 0 0 0;
+      /* margin: 24px 0 0 0; */
     }
  
   }

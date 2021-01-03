@@ -1,12 +1,10 @@
 <template>
     <div id="create-item-search-frame">
-
+        <create-item></create-item>
     </div>
 </template>
 
 <script>
-
-// Import page functionalilities from modules
 
 export default {
 
@@ -17,9 +15,6 @@ export default {
 <style scoped>
 
 #create-item-search-frame {
-    background-color: #FFFFFF;
-    min-height: 50px;
-    min-width: 100%;
 }
 
 </style>
