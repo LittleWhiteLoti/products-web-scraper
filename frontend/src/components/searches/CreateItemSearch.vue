@@ -14,7 +14,4 @@ export default {
 
 <style scoped>
 
-#create-item-search-frame {
-}
-
 </style>

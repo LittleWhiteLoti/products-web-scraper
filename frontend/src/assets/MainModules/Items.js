@@ -12,10 +12,21 @@ let createItem = () => {
 }
 */
 
+// items is an object with nested properties
+// name
+// search interval
+// lowest buy price
+// highest buy price
+// retrailers
+// email
+// phonenumber 
+
 export default {
     namespaced: true,
     state() {
+        return {
 
+        }
     },
     getters: {
         nestedGetter() {
