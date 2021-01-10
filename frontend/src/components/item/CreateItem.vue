@@ -3,8 +3,19 @@
         <form id="item-form" @submit.prevent="validateItem">
             <div id="item-image-preview-container">
                 <input id="image" type="file" :bind="imageFile" @change="renderImage" />
+                <div id="item-image-preview-frame">
+                </div>
+                <div id="item-image-editor-background">
+                </div>
+                <!--
                 <div id="item-image-preview">
-                    <img :src="imageSrc" />
+                    <div id="item-image-resize-container">
+                        <span class="resize-handles resize-handle-top-right"></span>
+                        <span class="resize-handles resize-handle-bottom-right"></span>
+                        <img :src="imageSrc" />
+                        <span class="resize-handles resize-handle-bottom-left"></span>
+                        <span class="resize-handles resize-handle-top-left"></span>
+                    </div>                    
                 </div>
                 <div class="image-interaction-frame">
                     <div class="image-button-container" v-if="imageFile != ''">
@@ -14,6 +25,7 @@
                         <label for="image" class="image-interaction-button">Select Image</label>
                     </div>
                 </div>
+                -->
             </div>
             <div id="item-information-container">
                 <div class="item-information-block">
@@ -47,8 +59,8 @@
                     <input type="text" name="b&amp;h" @input="validateLink" placeholder="Product link" />
                 </div>
                 <div>
-                    <label>Microcenter</label>
-                    <input type="text" name="microcenter" @input="validateLink" placeholder="Product link" />
+                    <label>Best Buy</label>
+                    <input type="text" name="bestbuy" @input="validateLink" placeholder="Product link" />
                 </div>
             </div>
             <div class="notifications-frame">
@@ -217,13 +229,15 @@ export default {
                 case "amazon":
                     regex = new RegExp(/^https:\/\/(www\.)?amazon\.com\//i);
                     validURL = regex.test(value);
+                    regex = new RegExp(/^https:\/\/(www\.)?amzn\.to\//i);
+                    validURL = (!validURL) ? regex.test(value) : validURL;
                 break;
                 case "b&h":
                     regex = new RegExp(/^https:\/\/(www\.)?bhphotovideo\.com\//i);
                     validURL = regex.test(value);
                 break;
-                case "microcenter":
-                    regex = new RegExp(/^https:\/\/(www\.)?microcenter\.com\/product\//i);
+                case "bestbuy":
+                    regex = new RegExp(/^https:\/\/(www\.)?bestbuy\.com\/site\//i);
                     validURL = regex.test(value);
                 break;
             }
@@ -314,15 +328,16 @@ export default {
     border: 1px solid #000000;
     min-width: 100px;
     max-width: 100px;
-    min-height: 100px;
-    max-height: 100px;
+    min-height: 120px;
+    max-height: 120px;
     flex: 0 0 18%;
+    position: relative;
 }
 
 #image {
     display: none;
 }
-
+/*
 #item-image-preview {
     display: block;
     min-height: inherit;
@@ -333,7 +348,7 @@ export default {
     display: block;
     width: 100%;
 }
-
+*/
 .image-interaction-frame {
     position: relative;
 }
@@ -467,5 +482,40 @@ export default {
     width: 34px;
     text-align: center;
 }
+
+/* Resizeable image container */
+
+#item-image-preview-frame {
+    position: absolute;
+    border: 1px solid #006600;
+    box-sizing: border-box;
+    min-width: 100%;
+    min-height: 100px;
+    z-index: 999;
+}
+
+#item-image-preview {
+    position: relative;
+    display: inline-block;
+    cursor: move;
+    margin: 0 auto;
+}
+
+#item-image-preview img {
+    display: block;
+}
+
+#item-image-preview:hover img,
+#item-image-preview:active img {
+    outline: 2px dashed rgba(222,60,80,.9);
+}
+
+.image-interaction-frame {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+
+/* Resizeable image container */
 
 </style>

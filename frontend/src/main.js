@@ -11,6 +11,7 @@ import CreateItemSearch from './components/searches/CreateItemSearch.vue'
 import ActiveSearches from './components/searches/ActiveSearches.vue'
 import PausedSearches from './components/searches/PausedSearches.vue'
 import RemovedSearches from './components/searches/RemovedSearches.vue'
+import ImageEditor from './assets/single-file-components/ImageEditor.vue'
 
 const app = createApp(App);
 
@@ -26,6 +27,7 @@ app.component('create-item-search', CreateItemSearch);
 app.component('active-searches', ActiveSearches);
 app.component('paused-searches', PausedSearches);
 app.component('removed-searches', RemovedSearches);
+app.component('image-editor', ImageEditor);
 
 const Router = createRouter({
     routes: [
