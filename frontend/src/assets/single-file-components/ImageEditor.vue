@@ -1,5 +1,5 @@
 <template>
-    <div class="editor-container">
+    <div class="editor-container" :style="editorContainerStyles">
         <div class="editor" :style="editorStyles">
             <div class="crop-area" :style="cropAreaStyles">
                 Cropping Area
@@ -7,15 +7,14 @@
             <div class="resize-container" :style="resizeContainerStyles">
                 <span class="resize-handle top-right-handle" :style="[resizeHandleStyles, topRightHandleStyles]" @mouseup="resizeImage"></span>
                 <span class="resize-handle bottom-right-handle" :style="[resizeHandleStyles, bottomRightHandleStyles]" @mouseup="resizeImage"></span>
-                <img :src="src">
-                <img ref="hidden-image" :src="hiddenDataImage">
+                <img :src="src" ref="image" style="visibility: hidden">
                 <span class="resize-handle bottom-left-handle" :style="[resizeHandleStyles, bottomLeftHandleStyles]" @mouseup="resizeImage"></span>
                 <span class="resize-handle itop-left-handle" :style="[resizeHandleStyles, topLeftHandleStyles]" @mouseup="resizeImage"></span>
             </div>
         </div>
-        <input id="upload-image" type="file" :src="src" @change="loadImage">
+        <input type="file" @change="loadImage">
         <div class="functions-container">
-            <label for="upload-image">Upload Image</label>
+            <label @click="uploadImage">Upload Image</label>
             <button @click="uploadImage">Upload Image</button>
             <template v-if="src != ''">
                 <label>Upload Image</label>
@@ -30,6 +29,8 @@
                 <button type="button" @click="redoChange">Redo Change</button>
                 <label>Undo Change</label>
                 <button type="button" @click="undoChange">Undo Change</button>
+                <label>Save Change</label>
+                <button type="button" @click="saveChange">Save Change</button>
             </template>
         </div>
     </div>
@@ -39,6 +40,38 @@
 
 export default {
     props: {
+        editorContainerHeight: {
+            type: String,
+            default: "initial"
+        },
+        editorContainerWidth: {
+            type: String,
+            default: "initial"
+        },
+        editorContainerBorder: {
+            type: String,
+            default: "",
+        },
+        editorContainerRadius: {
+            type: String,
+            default: "",
+        },
+        editorHeight: {
+            type: String,
+            default: "initial"
+        },
+        editorWidth: {
+            type: String,
+            default: "initial"
+        },
+        editorBorder: {
+            type: String,
+            default: "",
+        },
+        editorRadius: {
+            type: String,
+            default: "",
+        },
         cropAreaHeight: {
             type: String,
             default: "50px"
@@ -58,26 +91,6 @@ export default {
         cropAreaOutline: {
             type: String,
             default: ""
-        },
-        editorHeight: {
-            type: String,
-            default: "initial"
-        },
-        editorWidth: {
-            type: String,
-            default: "initial"
-        },
-        editorBorder: {
-            type: String,
-            default: "",
-        },
-        editorRadius: {
-            type: String,
-            default: "",
-        },
-        editorDisplay: {
-            type: String,
-            default: "table"
         },
         resizeContainerBorder: {
             type: String,
@@ -121,29 +134,19 @@ export default {
 
         let src = '';
 
-        let hiddenDataImage = '';
-
-        let width = '';
-
-        let height = '';
-
         return {
-            src,
-            hiddenDataImage,
-            width,
-            height
+            src
         }
     },
     computed: {
-        cropAreaStyles() { 
+        editorContainerStyls() {
             return {
-                'min-height': this.cropAreaHeight,
-                'min-width': this.cropAreaWidth,
-                'max-height': this.cropAreaHeight,
-                'max-width': this.cropAreaWidth,
-                'border': this.cropAreaBorder,
-                'border-radius': this.cropAreaRadius,
-                'outline': this.cropAreaOutline
+                'min-height': this.editorContainerHeight,
+                'min-width': this.editorContainerWidth,
+                'max-height': this.editorContainerHeight,
+                'max-width': this.editorContainerWidth,
+                'border': this.editorContainerBorder,
+                'border-radius': this.editorContainerRadius                
             }
         },
         editorStyles() {
@@ -153,8 +156,18 @@ export default {
                 'max-height': this.editorHeight,
                 'max-width': this.editorWidth,
                 'border': this.editorBorder,
-                'border-radius': this.editorRadius,
-                'display': this.editorDisplay
+                'border-radius': this.editorRadius
+            }
+        },
+        cropAreaStyles() { 
+            return {
+                'min-height': this.cropAreaHeight,
+                'min-width': this.cropAreaWidth,
+                'max-height': this.cropAreaHeight,
+                'max-width': this.cropAreaWidth,
+                'border': this.cropAreaBorder,
+                'border-radius': this.cropAreaRadius,
+                'outline': this.cropAreaOutline
             }
         },
         resizeContainerStyles() {
@@ -199,6 +212,7 @@ export default {
 
         },
         uploadImage(e) {
+            // Both of these reference the same element
             let element = e.currentTarget.parentNode.previousSibling;
             element.click();
         },
@@ -207,21 +221,16 @@ export default {
 
             let reader = new FileReader;
 
-            //console.log(this.$refs['hidden-image']);
-
             reader.onload = (e) => {
                 let data = e.target.result;
+                this.src = data;
+            }
 
-                this.hiddenDataImage = data;
-
-                console.log(this.$refs['hidden-image']);
-
-                this.height = this.$refs['hidden-image'].height;
-
-                this.width = this.$refs['hidden-image'].width;
-
-                console.log(`Width: ${ this.width }  Height: ${ this.height} `);
-
+            reader.onloadend = () => {
+                let element = this.$refs['image'];
+                this.height = element.clientHeight;
+                this.width = element.clientWidth;
+                console.log(this.height);
             }
 
             reader.readAsDataURL(image);
@@ -239,6 +248,9 @@ export default {
 
         },
         redoChange() {
+
+        },
+        saveChange() {
 
         }
     }
@@ -314,10 +326,6 @@ export default {
     cursor: nw-resize;
 }
 
-#upload-image {
-    display: none;
-}
-
 .functions-container {
     display: flex;
     flex-wrap: nowrap;
@@ -325,6 +333,8 @@ export default {
 
 .functions-container * {
     flex-grow: 1;
+    max-height: 22px;
+    overflow: hidden;
 }
 
 label {
