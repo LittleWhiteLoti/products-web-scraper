@@ -152,6 +152,7 @@ export default {
         // Image src is created inside the component not passed in
     },
     data() {
+
         // display: inline-block makes the element wrap around it's children like span
         let container;
 
@@ -162,7 +163,8 @@ export default {
         let canvas = document.createElement('canvas');
 
         // The initial
-        let aspectRatio = false;
+        // let aspectRatio = false; Temporary
+        let aspectRatio = true;
         let initialLeft;
         let initialTop;
         let leftOffset;
@@ -179,10 +181,10 @@ export default {
         let imageStates;
 
         return {
-            aspectRatio,
             container,
             src,
             canvas,
+            aspectRatio,
             initialLeft,
             initialTop,
             leftOffset,
@@ -352,22 +354,31 @@ export default {
                 break;
             }
 
+            // Algorithm needs to be adjusted for every handle
+            // Algorithm for handle bottom right
             if(this.aspectRatio) {
+
+                let editor = JSON.parse(JSON.stringify(this.container.parentNode.getBoundingClientRect()));
+
+                // Get all changex in X & Y
                 let changeX = e.clientX - this.initialLeft;
                 let newWidth = this.width + changeX;
-                let changeY = e.clientY - this.initialTop;
-                let newHeight = this.height + changeY;
-                
-                if(changeX != 0) {
-                    this.container.style.width = newWidth + 'px';
-                    this.container.style.height = newWidth + 'px';
+                let dimensions = this.container.getBoundingClientRect();
+                // Top position needs to be subtracted from clientY to get the real clientY
+                let top = dimensions['top'];
+                if(this.width - changeX >= 0) {
+                    if(dimensions['width'] - newWidth >= 0)
+                    {
+                        this.container.style.width = newWidth + 'px';
+                        this.container.style.height = newWidth + 'px';                        
+                    }
+                    else
+                    {
+                        changeX = Math.abs(dimensions['width'] - Math.abs(newWidth));
+                        this.container.style.width = dimensions['width'] + changeX + 'px';
+                        this.container.style.height = dimensions['width'] + changeX + 'px';
+                    }
                 }
-                /*
-                if(changeY != 0) {
-                    this.container.style.width = newHeight + 'px';
-                    this.container.style.height = newHeight + 'px';                    
-                }
-                */
             }
         },
         endResize(e) {
