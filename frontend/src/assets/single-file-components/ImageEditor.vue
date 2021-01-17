@@ -341,7 +341,6 @@ export default {
             //if(e.clientX - editor['left'] < 0) return;
             //if(e.clientX - this.width > this.width) return;
 
-
             let changeX = Math.ceil(e.clientX) - editor['left'];
             let changeY = Math.ceil(e.clientY) - editor['top'];
             let mouseX;
@@ -350,8 +349,6 @@ export default {
             let containerDimensions = JSON.parse(JSON.stringify(container.getBoundingClientRect()));
             let image = this.image;
 
-            let offsetX;
-            let offsetY;
             let boundaryX = (this.width - changeX);
             let boundaryY = (this.height - changeY);
             
@@ -377,20 +374,34 @@ export default {
                 break;
                 case 'bottom-left-handle':
                     if(this.aspectRatio) {
-
+                        container.style.left = ((this.width - boundaryX) >= this.handleSize) ? (this.width - boundaryX) + "px" : container.style.left;
+                        container.style.width = ((this.width - (this.width - boundaryX)) >= this.handleSize) ? (this.width - (this.width - boundaryX)) + "px" : container.style.width;
+                        // Check algorithm
+                        image.style.width = (boundaryX >= this.handleSize) ? boundaryX + "px" : image.style.width;
+                        image.style.height = (boundaryX >= this.handleSize) ? boundaryX + "px" : image.style.height;
                     }
                     else
                     {
-
+                        container.style.left = (boundaryX >= this.handleSize) ? changeX + 'px' : container.style.left;
+                        container.style.width = (boundaryX >= this.handleSize) ? (this.width - changeX) + "px" : container.style.width;
+                        image.style.width = (boundaryX >= this.handleSize) ? (this.width - changeX) + 'px' : image.style.width;
+                        image.style.height = this.height + "px";
                     }
                 break;
                 case 'bottom-right-handle':
                     if(this.aspectRatio) {
-
+                        container.style.width = ((this.width - boundaryX) >= this.handleSize) ? (this.width - boundaryX) + "px" : container.style.width;
+                        container.style.height = ((this.width - boundaryX) >= this.handleSize) ? (this.width - boundaryX) + "px" : container.style.height;
+                        image.style.width = ((this.width - boundaryX) >= this.handleSize) ? (this.width - boundaryX) + "px" : image.style.width;
+                        image.style.height = ((this.width - boundaryX) >= this.handleSize) ? (this.width - boundaryX) + "px" : image.style.height;
                     }
                     else
                     {
-
+                        //console.log((this.width - boundaryX));
+                        container.style.width = ((this.width - boundaryX) >= this.handleSize) ? (this.width - boundaryX) + "px" : container.style.width;
+                        container.style.height = this.height + "px";
+                        image.style.width = ((this.width - boundaryX) >= this.handleSize) ? (this.width - boundaryX) + "px" : image.style.width;
+                        image.style.height = this.height + "px";
                     }
                 break;
                 case 'top-right-handle':
