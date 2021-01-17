@@ -81,10 +81,6 @@ export default {
             type: String,
             default: "initial"
         },
-        editorPadding: {
-            type: String,
-            default: "4px"
-        },
         editorBorder: {
             type: String,
             default: "",
@@ -125,13 +121,9 @@ export default {
             type: String,
             default: ""
         },
-        resizeHandleHeight: {
+        resizeHandleSize: {
             type: String,
-            default: "10px"            
-        },
-        resizeHandleWidth: {
-            type: String,
-            default: "10px"
+            default: "5px"            
         },
         resizeHandleBackground: {
             type: String,
@@ -162,9 +154,13 @@ export default {
         // Canvas variable will be assigned when image is loaded
         let canvas = document.createElement('canvas');
 
+        let handleSize;
+
+        let handle;
+
         // The initial
-        // let aspectRatio = false; Temporary
-        let aspectRatio = true;
+        let aspectRatio = false;
+        //let aspectRatio = true;
         let initialLeft;
         let initialTop;
         let leftOffset;
@@ -175,7 +171,6 @@ export default {
         let height;
         let rotation;
         let flipped;
-        let handle;
 
         // Array of image state: initialLeft, initialTop, width, height, rotation
         let imageStates;
@@ -184,6 +179,8 @@ export default {
             container,
             src,
             canvas,
+            handleSize,
+            handle,
             aspectRatio,
             initialLeft,
             initialTop,
@@ -195,7 +192,6 @@ export default {
             height,
             rotation,
             flipped,
-            handle,
             imageStates
         }
     },
@@ -216,7 +212,6 @@ export default {
                 'min-width': this.editorWidth,
                 'max-height': this.editorHeight,
                 'max-width': this.editorWidth,
-                'padding': this.editorPadding,
                 'border': this.editorBorder,
                 'border-radius': this.editorRadius
             }
@@ -241,10 +236,10 @@ export default {
         },
         resizeHandleStyles() {
             return {
-                'min-height': this.resizeHandleHeight,
-                'min-width': this.resizeHandleWidth,
-                'max-height': this.resizeHandleHeight,
-                'max-width': this.resizeHandleWidth,
+                'min-height': this.resizeHandleSize,
+                'min-width': this.resizeHandleSize,
+                'max-height': this.resizeHandleSize,
+                'max-width': this.resizeHandleSize,
                 'background': this.resizeHandleBackground,
                 'border': this.resizeHandleBorder,
                 'border-radius': this.resizeHandleRadius,
@@ -265,9 +260,18 @@ export default {
         }
     },
     mounted() {
+        // image & container are dynamically added adn available throughout the component
+        this.image = this.$refs['image'];
         this.container = this.$refs['image'].parentNode;
+        this.editor = this.container.parentNode;
         // Hides image handles on initial load
         this.showResizeHandles();
+
+        // Used later to prevent image from being shrunk too much
+        // Note: Even though the element has display: none the styles are still able
+        //       to be recieved because it is an inline style and not removed from DOM
+        let handleSize = parseInt(this.container.children[0].style.minWidth);
+        this.handleSize = (handleSize * 2);
     },
     methods: {
         showResizeHandles(show) {
@@ -285,8 +289,13 @@ export default {
         off(element, event, callback) {
             element.removeEventListener(event, callback);
         },
-        // paint transformation on canvas and display it
-        paintImage(e) {
+        // Reset the initial width & height 
+        saveInitialImageState() {
+            let container = JSON.parse(JSON.stringify(this.container.getBoundingClientRect()));
+            this.width = container['width'];
+            this.height = container['height'];
+            // First state is when image is loaded
+            this.imageStates.push({ 'left': 0, 'top': 0, 'width': this.width, 'height': this.height, 'rotation': 0, 'flipped': false });
         },
         // Call saveImageState once on image upload and everytime the endResize
         saveImageState(e) {
@@ -322,45 +331,93 @@ export default {
             let index = this.imageStates.length - 1;
             //console.log(JSON.parse(JSON.stringify(this.imageStates[index])));
         },
+        // paint transformation on canvas and display it
+        paintImage(e) {
+        },
         startResize(e) {
-            this.mouseX = e.clientX;
-            this.mouseY = e.clientY;
-            // e by itself gets the document and clientX & clientY is the mouseposition on the document
-            let element = e.target;
-            let classes = element.classList;
+            let editor = JSON.parse(JSON.stringify(this.editor.getBoundingClientRect()));
 
-            // Difference is applied to width and height of container
-            this.leftOffset = (this.mouseX - this.initialLeft);
-            this.topOffset = (this.mouseY - this.initialTop);
+            // Check for resizing attempts outside of editor region
+            //if(e.clientX - editor['left'] < 0) return;
+            //if(e.clientX - this.width > this.width) return;
 
-            // Current ImageState contains handle
-            let index = this.imageStates.length - 1;
-            let handle = JSON.parse(JSON.stringify(this.imageStates[index]))['handle'];
 
-            //console.log(e.code);
+            let changeX = Math.ceil(e.clientX) - editor['left'];
+            let changeY = Math.ceil(e.clientY) - editor['top'];
+            let mouseX;
+            let mouseY;
+            let container = this.container;
+            let containerDimensions = JSON.parse(JSON.stringify(container.getBoundingClientRect()));
+            let image = this.image;
+
+            let offsetX;
+            let offsetY;
+            let boundaryX = (this.width - changeX);
+            let boundaryY = (this.height - changeY);
+            
+            // Algorithm is different for every handle because each one applies a different change
             // Case statement is needed to preserve the height or width based on which handler is used
-            switch(handle) {
-                case 'top-right-handle':
-
-                break;
-                case 'bottom-right-handle':
-
+            switch(this.handle) {
+                case 'top-left-handle':
+                    // Prevent resizing smaller than image itself
+                    if(this.aspectRatio) {
+                        container.style.left = (boundaryX >= this.handleSize) ? changeX + 'px' : container.style.left;
+                        container.style.width = (boundaryX >= this.handleSize) ? (this.width - changeX) + "px" : container.style.width;
+                        //container.style.height = (boundaryX >= this.handleSize) ? (this.width - changeX) + "px" : container.style.width;
+                        image.style.width = (boundaryX >= this.handleSize) ? (this.height - changeX) + "px" : image.style.width;
+                        image.style.height = (boundaryX >= this.handleSize) ? (this.height - changeX) + "px" : image.style.height;                         
+                    }
+                    else
+                    {
+                        container.style.left = (boundaryX >= this.handleSize) ? changeX + 'px' : container.style.left;
+                        container.style.width = (boundaryX >= this.handleSize) ? (this.width - changeX) + "px" : container.style.width;
+                        image.style.width = (boundaryX >= this.handleSize) ? (this.width - changeX) + "px" : image.style.width;
+                        image.style.height = (boundaryX >= this.handleSize) ? this.height + "px" : image.style.height;
+                    }
                 break;
                 case 'bottom-left-handle':
+                    if(this.aspectRatio) {
 
+                    }
+                    else
+                    {
+
+                    }
                 break;
-                case 'top-left-handle':
+                case 'bottom-right-handle':
+                    if(this.aspectRatio) {
 
+                    }
+                    else
+                    {
+
+                    }
+                break;
+                case 'top-right-handle':
+                    if(this.aspectRatio) {
+                        container.style.width = (changeX >= this.handleSize) ? (changeX) + "px" : container.style.width;
+                        //container.style.height = (changeX >= this.handleSize) ? (changeX) + "px" : container.style.width;
+                        image.style.width = (changeX >= this.handleSize) ? (changeX) + "px" : image.style.width;
+                        image.style.height = (changeX >= this.handleSize) ? (changeX) + "px" : image.style.height; 
+                    }
+                    else
+                    {
+                        container.style.width = (changeX >= this.handleSize) ? (changeX) + "px" : container.style.width;
+                        container.style.height = this.height + "px";
+                        image.style.width = (changeX >= this.handleSize) ? (changeX) + "px" : container.style.width; 
+                        image.style.height = this.height + "px";
+                    }
                 break;
             }
 
+            /*
             // Algorithm needs to be adjusted for every handle
             // Algorithm for handle bottom right
             if(this.aspectRatio) {
 
                 let editor = JSON.parse(JSON.stringify(this.container.parentNode.getBoundingClientRect()));
 
-                // Get all changex in X & Y
+                // Get all changex in X
                 let changeX = e.clientX - this.initialLeft;
                 let newWidth = this.width + changeX;
                 let dimensions = this.container.getBoundingClientRect();
@@ -379,7 +436,12 @@ export default {
                         this.container.style.height = dimensions['width'] + changeX + 'px';
                     }
                 }
+
+                dimensions = this.container.getBoundingClientRect();
+                // Apply Y changes 
+
             }
+            */
         },
         endResize(e) {
             // Must call to prevent memory leaks
@@ -388,10 +450,15 @@ export default {
         startResizingImage(e) {
             e.preventDefault();
             e.stopPropagation();
-            // get image width & height after reader.onloadended function otherwise it will 
-            // return anything other than 0 on clientWidth & clientHeight
-            // Call save state only on resize handlers
-            e.target.classList.contains('resize-handle') ? this.saveImageState(e) : "";
+            // If image state 0 it needs to save the initial state
+            this.imageStates.length == 0 ? this.saveInitialImageState() : "";
+            // Save handle that initiated the resize
+            let classes = e.target.classList;
+            this.handle = classes.contains('top-right-handle') ? 'top-right-handle' : this.handle;
+            this.handle = classes.contains('bottom-right-handle') ? 'bottom-right-handle' : this.handle;
+            this.handle = classes.contains('bottom-left-handle') ? 'bottom-left-handle' : this.handle;
+            this.handle = classes.contains('top-left-handle') ? 'top-left-handle' : this.handle;
+            // Transformations are applied to resize container 
             this.on(document, 'mousemove', this.startResize);
             // Event needed to cancel mousemove
             this.on(document, 'mouseup', this.endResize);
@@ -399,12 +466,15 @@ export default {
         // !Important: endResizingImage only fires when the currentTarget is span, therefore the image needs to move to keep span targetted
         endResizingImage(e) {
             e.stopPropagation();
+            // Save state once the mouse is released
+            console.log("Finished resizing");
+
             // Remove event handlers to prevent memory leaks
             // Unable to remove movemouse startReize in current function, must do it when endResize is called
-            this.off(document, 'mouseup', this.endResize);
+            //this.off(document, 'mouseup', this.endResize);
             // Apply transformations but don't save state
-            this.assignNewImageDimensions();
-            this.paintImage();
+            //this.assignNewImageDimensions();
+            //this.paintImage();
         },
         startMovingImage(e) {
 
@@ -429,17 +499,16 @@ export default {
                 this.src = e.target.result;
                 // Show image handles after image has loaded
                 this.showResizeHandles(true);
-                // Reset properties after every upload
-                this.left = 0;
-                this.top = 0;
-                this.rotation = 0;
-                this.flipped = false;
+                // Triggers saving initial state
                 this.imageStates = new Array();
+
+                this.container.style.top = "0px";
+                this.container.style.left = "0px";
             }
             reader.readAsDataURL(image);
         },
         reset() {
-
+            console.log(this.imageStates[0]);
         },
         rotate() {
 
@@ -493,13 +562,12 @@ export default {
     position: absolute;
     cursor: move;
     margin: 0 auto;
+    border: 1px solid red;
     /* Set element at the top by default if handles were not hidden by default */
     vertical-align: top;
 }
 .resize-container img {
     display: block;
-    width: 100%;
-    height: 100%;
 }
 
 .resize-handle {
@@ -509,26 +577,26 @@ export default {
 }
 
 .top-right-handle {
-    top: -5px;
-    right: -5px;
+    top: 0;
+    right: 0;
     cursor: ne-resize;
 }
 
 .bottom-right-handle {
-    bottom: -5px;
-    right: -5px;
+    bottom: 0;
+    right: 0;
     cursor: se-resize;
 }
 
 .bottom-left-handle {
-    bottom: -5px;
-    left: -5px;
+    bottom: 0;
+    left: 0;
     cursor: sw-resize;
 }
 
 .top-left-handle {
-    top: -5px;
-    left: -5px;
+    top: 0px;
+    left: 0;
     cursor: nw-resize;
 }
 
