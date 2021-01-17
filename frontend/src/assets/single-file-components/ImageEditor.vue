@@ -12,12 +12,12 @@
                 <span class="resize-handle bottom-left-handle" :style="[resizeHandleStyles, bottomLeftHandleStyles]" @mousedown="startResizingImage" @touchstart="startResizingImage" @mouseup="endResizingImage" @touchmove="endResizingImage"></span>
                 <span class="resize-handle top-left-handle" :style="[resizeHandleStyles, topLeftHandleStyles]" @mousedown="startResizingImage" @touchstart="startResizingImage" @mouseup="endResizingImage" @touchmove="endResizingImage"></span>
                 -->
-                <span class="resize-handle top-right-handle" :style="[resizeHandleStyles, topRightHandleStyles]" @mousedown="startResizingImage"></span>
-                <span class="resize-handle bottom-right-handle" :style="[resizeHandleStyles, bottomRightHandleStyles]" @mousedown="startResizingImage"></span>
+                <span class="resize-handle top-right-handle" :style="[resizeHandleStyles, topRightHandleStyles]" @mousedown="startResizingImage" @mouseup="endResizingImage"></span>
+                <span class="resize-handle bottom-right-handle" :style="[resizeHandleStyles, bottomRightHandleStyles]" @mousedown="startResizingImage" @mouseup="endResizingImage"></span>
                 <!-- class moveable-image is used for detection in saving state -->
                 <img class="moveable-image" :src="src" ref="image" @mousedown="startMovingImage" @touchstart="startMovingImage" @mouseup="endMovingImage">
-                <span class="resize-handle bottom-left-handle" :style="[resizeHandleStyles, bottomLeftHandleStyles]" @mousedown="startResizingImage"></span>
-                <span class="resize-handle top-left-handle" :style="[resizeHandleStyles, topLeftHandleStyles]" @mousedown="startResizingImage"></span>
+                <span class="resize-handle bottom-left-handle" :style="[resizeHandleStyles, bottomLeftHandleStyles]" @mousedown="startResizingImage" @mouseup="endResizingImage"></span>
+                <span class="resize-handle top-left-handle" :style="[resizeHandleStyles, topLeftHandleStyles]" @mousedown="startResizingImage" @mouseup="endResizingImage"></span>
             </div>
         </div>
         <input type="file" @change="loadImage">
@@ -151,9 +151,6 @@ export default {
         // Original image source
         let src;
 
-        // Canvas variable will be assigned when image is loaded
-        let canvas = document.createElement('canvas');
-
         let handleSize;
 
         let handle;
@@ -178,7 +175,6 @@ export default {
         return {
             container,
             src,
-            canvas,
             handleSize,
             handle,
             aspectRatio,
@@ -292,47 +288,25 @@ export default {
         // Reset the initial width & height 
         saveInitialImageState() {
             let container = JSON.parse(JSON.stringify(this.container.getBoundingClientRect()));
-            this.width = container['width'];
-            this.height = container['height'];
+
+            // The -1 is for the jump bug that occurs when width or height is read as NaN
+            this.width = Math.floor(container['width'] -1);
+            this.height = Math.floor(container['height'] -1);
             // First state is when image is loaded
             this.imageStates.push({ 'left': 0, 'top': 0, 'width': this.width, 'height': this.height, 'rotation': 0, 'flipped': false });
         },
         // Call saveImageState once on image upload and everytime the endResize
         saveImageState(e) {
-            this.initialLeft = e.clientX;
-            this.initialTop = e.clientY;
-            let container = this.container.getBoundingClientRect();
-            this.width = container['width'];
-            this.height = container['height'];
-            // The handle used to start the resize
-            let element = e.target;
-            let classes = element.classList;
-            // Note: Might not work for moving...
-            let handle;
-            switch(true) {
-                case classes.contains('top-right-handle'):
-                    handle = 'top-right-handle';
-                break;
-                case classes.contains('bottom-right-handle'):
-                    handle = 'bottom-right-handle';
-                break;
-                case classes.contains('bottom-left-handle'):
-                    handle = 'bottom-left-handle';
-                break;
-                case classes.contains('top=left-handle'):
-                    handle = 'top=left-handle';
-                break;
-                case classes.contains('moveable-image'):
-                    handle = 'moveable-image';
-                break;
-            }
-            this.imageStates.push({ 'left': this.left, 'top': this.top, 'width': this.width, 'height': this.height, 'rotation': this.rotation, 'handle': handle });
-            // rotation is updated at the end
-            let index = this.imageStates.length - 1;
-            //console.log(JSON.parse(JSON.stringify(this.imageStates[index])));
-        },
-        // paint transformation on canvas and display it
-        paintImage(e) {
+            console.log("Saving image state");
+            // clear handle
+            this.handle = "";
+            let container = this.container;
+            let dimensions = JSON.parse(JSON.stringify(container.getBoundingClientRect()));
+            this.left = Math.floor(dimensions['left']);
+            this.top = Math.floor(dimensions['top']);
+            this.width = Math.floor(dimensions['width'] - 1);
+            this.height = Math.floor(dimensions['height'] - 1);
+            this.imageStates.push({ 'left': this.left, 'top': this.top, 'width': this.width, 'height': this.height, 'rotation': this.rotation, 'flipped': this.flipped });
         },
         startResize(e) {
             let editor = JSON.parse(JSON.stringify(this.editor.getBoundingClientRect()));
@@ -347,11 +321,12 @@ export default {
             let mouseY;
             let container = this.container;
             let containerDimensions = JSON.parse(JSON.stringify(container.getBoundingClientRect()));
+            //console.log(containerDimensions);
             let image = this.image;
 
             let boundaryX = (this.width - changeX);
             let boundaryY = (this.height - changeY);
-            
+
             // Algorithm is different for every handle because each one applies a different change
             // Case statement is needed to preserve the height or width based on which handler is used
             switch(this.handle) {
@@ -376,7 +351,7 @@ export default {
                     if(this.aspectRatio) {
                         container.style.left = ((this.width - boundaryX) >= this.handleSize) ? (this.width - boundaryX) + "px" : container.style.left;
                         container.style.width = ((this.width - (this.width - boundaryX)) >= this.handleSize) ? (this.width - (this.width - boundaryX)) + "px" : container.style.width;
-                        // Check algorithm
+
                         image.style.width = (boundaryX >= this.handleSize) ? boundaryX + "px" : image.style.width;
                         image.style.height = (boundaryX >= this.handleSize) ? boundaryX + "px" : image.style.height;
                     }
@@ -454,10 +429,6 @@ export default {
             }
             */
         },
-        endResize(e) {
-            // Must call to prevent memory leaks
-            this.off(document, 'mousemove', this.startResize);
-        },
         startResizingImage(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -472,20 +443,16 @@ export default {
             // Transformations are applied to resize container 
             this.on(document, 'mousemove', this.startResize);
             // Event needed to cancel mousemove
-            this.on(document, 'mouseup', this.endResize);
+            this.on(document, 'mouseup', this.endResizingImage);
         },
         // !Important: endResizingImage only fires when the currentTarget is span, therefore the image needs to move to keep span targetted
         endResizingImage(e) {
             e.stopPropagation();
-            // Save state once the mouse is released
-            console.log("Finished resizing");
+            this.off(document, 'mousemove', this.startResize);
+            this.off(document, 'mouseup', this.endResizingImage);
 
-            // Remove event handlers to prevent memory leaks
-            // Unable to remove movemouse startReize in current function, must do it when endResize is called
-            //this.off(document, 'mouseup', this.endResize);
-            // Apply transformations but don't save state
-            //this.assignNewImageDimensions();
-            //this.paintImage();
+            // Save state once the mouse is released
+            this.saveImageState();
         },
         startMovingImage(e) {
 
@@ -515,11 +482,24 @@ export default {
 
                 this.container.style.top = "0px";
                 this.container.style.left = "0px";
+                this.rotation = 0;
+                this.flipped = false;
             }
             reader.readAsDataURL(image);
         },
         reset() {
-            console.log(this.imageStates[0]);
+            if(this.imageStates.length == 0) return;
+            let dimensions = JSON.parse(JSON.stringify(this.imageStates[0])); 
+            this.container.style.width = dimensions['width'] + "px";
+            this.container.style.height = dimensions['height'] + "px";
+            this.container.style.left = dimensions['left'] + "px";
+            this.container.style.top = dimensions['top'] + "px"; 
+            this.container.style.transform = 'rotate(' + dimensions['rotation'] + 'deg)';
+            this.image.style.width = dimensions['width'] + "px";
+            this.image.style.height = dimensions['height'] + "px";
+            this.left = dimensions['left'] + "px";
+            this.top = dimensions['top'] + "px";
+  
         },
         rotate() {
 
@@ -531,7 +511,7 @@ export default {
 
         },
         undo() {
-
+            
         },
         redo() {
 
