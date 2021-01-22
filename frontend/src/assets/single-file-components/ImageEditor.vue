@@ -156,8 +156,8 @@ export default {
         let handle;
 
         // The initial
-        let aspectRatio = false;
-        //let aspectRatio = true;
+        //let aspectRatio = false;
+        let aspectRatio = true;
         let initialLeft;
         let initialTop;
         let leftOffset;
@@ -288,16 +288,18 @@ export default {
         // Reset the initial width & height 
         saveInitialImageState() {
             let container = JSON.parse(JSON.stringify(this.container.getBoundingClientRect()));
-
+            console.log("Initial state" + container);
+            // Add these when saving state only.
+            this.initialLeft = Math.floor(container['left']);
+            this.initialTop = Math.floor(container['top']);
             // The -1 is for the jump bug that occurs when width or height is read as NaN
             this.width = Math.floor(container['width'] -1);
             this.height = Math.floor(container['height'] -1);
             // First state is when image is loaded
-            this.imageStates.push({ 'left': 0, 'top': 0, 'width': this.width, 'height': this.height, 'rotation': 0, 'flipped': false });
+            this.imageStates.push({ 'left': this.initialLeft, 'top': this.initialTop, 'width': this.width, 'height': this.height, 'rotation': 0, 'flipped': false });
         },
         // Call saveImageState once on image upload and everytime the endResize
         saveImageState(e) {
-            console.log("Saving image state");
             // clear handle
             this.handle = "";
             let container = this.container;
@@ -307,6 +309,8 @@ export default {
             this.width = Math.floor(dimensions['width'] - 1);
             this.height = Math.floor(dimensions['height'] - 1);
             this.imageStates.push({ 'left': this.left, 'top': this.top, 'width': this.width, 'height': this.height, 'rotation': this.rotation, 'flipped': this.flipped });
+            console.log("Saving image state");
+            console.log(dimensions);
         },
         startResize(e) {
             let editor = JSON.parse(JSON.stringify(this.editor.getBoundingClientRect()));
@@ -315,17 +319,16 @@ export default {
             //if(e.clientX - editor['left'] < 0) return;
             //if(e.clientX - this.width > this.width) return;
 
-            let changeX = Math.ceil(e.clientX) - editor['left'];
-            let changeY = Math.ceil(e.clientY) - editor['top'];
-            let mouseX;
-            let mouseY;
+            let changeX = Math.ceil(e.clientX - editor['left']);
+            let changeY = Math.ceil(e.clientY - editor['top']);
             let container = this.container;
-            let containerDimensions = JSON.parse(JSON.stringify(container.getBoundingClientRect()));
+            //let containerDimensions = JSON.parse(JSON.stringify(container.getBoundingClientRect()));
             //console.log(containerDimensions);
             let image = this.image;
 
             let boundaryX = (this.width - changeX);
             let boundaryY = (this.height - changeY);
+            //console.log("boundaryX: " + boundaryX + " boundaryY: " + boundaryY);
 
             // Algorithm is different for every handle because each one applies a different change
             // Case statement is needed to preserve the height or width based on which handler is used
@@ -365,10 +368,22 @@ export default {
                 break;
                 case 'bottom-right-handle':
                     if(this.aspectRatio) {
-                        container.style.width = ((this.width - boundaryX) >= this.handleSize) ? (this.width - boundaryX) + "px" : container.style.width;
-                        container.style.height = ((this.width - boundaryX) >= this.handleSize) ? (this.width - boundaryX) + "px" : container.style.height;
-                        image.style.width = ((this.width - boundaryX) >= this.handleSize) ? (this.width - boundaryX) + "px" : image.style.width;
-                        image.style.height = ((this.width - boundaryX) >= this.handleSize) ? (this.width - boundaryX) + "px" : image.style.height;
+                        // Figure out which has the bigger change, x-axis or y-axis
+                        if(changeX >= changeY) {
+                            container.style.width = ((this.width - boundaryX) >= this.handleSize) ? (this.width - boundaryX) + "px" : container.style.width;
+                            // Needed to maintain consistent width and height on container otherwise the image resizes at different times before correcting itself
+                            container.style.height = ((this.width - boundaryX) >= this.handleSize) ? (this.width - boundaryX) + "px" : container.style.height;
+                            image.style.width = ((this.width - boundaryX) >= this.handleSize) ? (this.width - boundaryX) + "px" : image.style.width;
+                            image.style.height = ((this.width - boundaryX) >= this.handleSize) ? (this.width - boundaryX) + "px" : image.style.height;
+                        }
+                        else
+                        {
+                            container.style.width = ((this.width - boundaryY) >= this.handleSize) ? (this.width - boundaryY) + "px" : container.style.width;
+                            // Needed to maintain consistent width and height on container otherwise the image resizes at different times before correcting itself
+                            container.style.height = ((this.width - boundaryY) >= this.handleSize) ? (this.width - boundaryY) + "px" : container.style.height;
+                            image.style.width = ((this.width - boundaryY) >= this.handleSize) ? (this.width - boundaryY) + "px" : image.style.width;
+                            image.style.height = ((this.width - boundaryY) >= this.handleSize) ? (this.width - boundaryY) + "px" : image.style.height;
+                        }
                     }
                     else
                     {
@@ -381,10 +396,63 @@ export default {
                 break;
                 case 'top-right-handle':
                     if(this.aspectRatio) {
-                        container.style.width = (changeX >= this.handleSize) ? (changeX) + "px" : container.style.width;
-                        //container.style.height = (changeX >= this.handleSize) ? (changeX) + "px" : container.style.width;
-                        image.style.width = (changeX >= this.handleSize) ? (changeX) + "px" : image.style.width;
-                        image.style.height = (changeX >= this.handleSize) ? (changeX) + "px" : image.style.height; 
+                            container.style.width = (boundaryX <= (this.width - this.handleSize)) ? (this.width - boundaryX) + "px" : container.style.width;
+                            //container.style.height = (boundaryX <= (this.width - this.handleSize)) ? (this.height - boundaryX) + " px" : container.style.height;
+                            container.style.height = (boundaryX <= (this.width - this.handleSize)) ? (this.height - boundaryX) + "px" : container.style.height;
+                            container.style.top = (boundaryX <= (this.width - this.handleSize)) ? (this.height - (this.height - boundaryX)) + "px" : container.style.top;
+                            console.log(container.style.top);
+                            image.style.width = (boundaryX <= (this.width - this.handleSize)) ? (this.width - boundaryX) + "px" : image.style.width;
+                            image.style.height = (boundaryX <= (this.width - this.handleSize)) ? (this.height - boundaryX) + "px" : image.style.height;
+                            if(boundaryX <= (this.width)) {
+                                /*
+                                console.log("Keep minimizing: " + boundaryX);
+                                container.style.width = (changeX >= this.handleSize) ? (changeX) + "px" : container.style.width;
+                                container.style.height = (changeX >= this.handleSize) ? (changeX) + "px" : container.style.width;
+                                // Algorithm: The push from the top needs to be whatever is removed from the width needs to be added to the top as long as it does not exceed the top
+                                container.style.top = (changeX >= this.handleSize) ? (this.height - changeX) + "px" : container.style.top;
+                                console.log(this.height - changeX);
+                                image.style.width = (changeX >= this.handleSize) ? (changeX) + "px" : image.style.width;
+                                image.style.height = (changeX >= this.handleSize) ? (changeX) + "px" : image.style.height;
+                                */
+                            }
+                            else
+                            {
+                                console.log("Stop minimizing");                                
+                            }
+                            //console.log(boundaryX);
+                            //container.style.width = (boundaryX >= (this.handleSize * 2)) ? (changeX) + "px" : container.style.width;
+                            /*
+                            container.style.width = (changeX >= this.handleSize) ? (changeX) + "px" : container.style.width;
+                            container.style.height = (changeX >= this.handleSize) ? (changeX) + "px" : container.style.width;
+                            // Algorithm: The push from the top needs to be whatever is removed from the width needs to be added to the top as long as it does not exceed the top
+                            container.style.top = (changeX >= this.handleSize) ? (this.height - changeX) + "px" : container.style.top;
+                            container.style.top = (changeX >= this.handleSize) ? console.log(boundaryX) : console.log("Stopped");
+                            image.style.width = (changeX >= this.handleSize) ? (changeX) + "px" : image.style.width;
+                            image.style.height = (changeX >= this.handleSize) ? (changeX) + "px" : image.style.height;
+                        // Algorithm is wrong, it needs to shrink from the top right but maintain position at bottom left
+                            */          
+                        if(changeX >= changeY) {
+                            /*
+                            container.style.width = (changeX >= this.handleSize) ? (changeX) + "px" : container.style.width;
+                            container.style.height = (changeX >= this.handleSize) ? (changeX) + "px" : container.style.width;
+                            console.log(this.height - changeX);
+                            // Increase container top position
+                            container.style.top = ((this.height - changeX) >= this.handleSize) ? (this.height - changeX) + "px" : container.style.top; 
+                            image.style.width = (changeX >= this.handleSize) ? (changeX) + "px" : image.style.width;
+                            image.style.height = (changeX >= this.handleSize) ? (changeX) + "px" : image.style.height;
+                            */
+                        }
+                        else
+                        {
+                            /*
+                            container.style.width = (changeY >= this.handleSize) ? (changeY) + "px" : container.style.width;
+                            container.style.height = (changeY >= this.handleSize) ? (changeY) + "px" : container.style.width;
+                            // Increase container top position
+                            //container.style.top = ((this.height - changeY) >= this.handleSize) ? (this.height - changeY) + "px" : container.style.top; 
+                            image.style.width = (changeY >= this.handleSize) ? (changeY) + "px" : image.style.width;
+                            image.style.height = (changeY >= this.handleSize) ? (changeY) + "px" : image.style.height;
+                            */                            
+                        }
                     }
                     else
                     {
@@ -395,39 +463,6 @@ export default {
                     }
                 break;
             }
-
-            /*
-            // Algorithm needs to be adjusted for every handle
-            // Algorithm for handle bottom right
-            if(this.aspectRatio) {
-
-                let editor = JSON.parse(JSON.stringify(this.container.parentNode.getBoundingClientRect()));
-
-                // Get all changex in X
-                let changeX = e.clientX - this.initialLeft;
-                let newWidth = this.width + changeX;
-                let dimensions = this.container.getBoundingClientRect();
-                // Top position needs to be subtracted from clientY to get the real clientY
-                let top = dimensions['top'];
-                if(this.width - changeX >= 0) {
-                    if(dimensions['width'] - newWidth >= 0)
-                    {
-                        this.container.style.width = newWidth + 'px';
-                        this.container.style.height = newWidth + 'px';                        
-                    }
-                    else
-                    {
-                        changeX = Math.abs(dimensions['width'] - Math.abs(newWidth));
-                        this.container.style.width = dimensions['width'] + changeX + 'px';
-                        this.container.style.height = dimensions['width'] + changeX + 'px';
-                    }
-                }
-
-                dimensions = this.container.getBoundingClientRect();
-                // Apply Y changes 
-
-            }
-            */
         },
         startResizingImage(e) {
             e.preventDefault();
@@ -499,7 +534,9 @@ export default {
             this.image.style.height = dimensions['height'] + "px";
             this.left = dimensions['left'] + "px";
             this.top = dimensions['top'] + "px";
-  
+            // clear position array
+            this.imageStates = new Array();
+            this.saveInitialImageState();
         },
         rotate() {
 
