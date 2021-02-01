@@ -252,8 +252,7 @@ export default {
         this.container = this.$refs['image'].parentNode;
         this.editor = this.container.parentNode;
         // Hides image handles on initial load
-        this.showResizeHandles();
-
+        this.showImageContainer();
         // Used later to prevent image from being shrunk too much
         // Note: Even though the element has display: none the styles are still able
         //       to be recieved because it is an inline style and not removed from DOM
@@ -261,14 +260,8 @@ export default {
         this.handleSize = (handleSize * 2);
     },
     methods: {
-        showResizeHandles(show) {
-            let children = this.container.children;
-            for(var i = 0, len = children.length; i < len; i++)
-            {
-                if(children[i].tagName == "SPAN") {
-                    children[i].style.display = show ? "block" : "none"; 
-                }
-            }   
+        showImageContainer(show) {
+            this.container.style.display = (show) ? "block" : "none";
         },
         on(element, event, callback) {
             element.addEventListener(event, callback);
@@ -283,43 +276,44 @@ export default {
             let dimensions = JSON.parse(JSON.stringify(container.getBoundingClientRect()));
 
             // Note: Never apply styles to image because it is the full width and height of the container
-
             // Values are used when repainting and should only be saved at the end of image state
-            this.width = dimensions['width'] -2;
-            this.height = dimensions['height'] -2;
-            //this.left = 0;
-            //this.top = 0;
+            this.width = Math.floor(dimensions['width']) -2;
+            this.height = Math.floor(dimensions['height']) -2;
+            this.left = 0;
+            this.top = 0;
 
             // Initialize inline css values to prevent NaN but never save
             container.style.width = dimensions['width'] -2 + "px";
             container.style.height = dimensions['height'] -2 + "px";
-            //container.style.left = "0px";
-            //container.style.top = "0px";
+            container.style.left = "0px";
+            container.style.top = "0px";
 
             // Declare initial transformations
             this.rotation = 0;
             this.flipped = false;
 
             // The -2 is for the jump bug that occurs when width or height
-            this.imageStates.push({ 'left': 0, 'top': 0, 'width': Math.floor(dimensions['width']) -2, 'height': Math.floor(dimensions['top']) -2, 'rotation': 0, 'flipped': false });
+            this.imageStates.push({ 'left': this.left, 'top': this.top, 'width': this.width, 'height': this.height, 'rotation': 0, 'flipped': false });
             //console.log("intial state: " + JSON.stringify(this.imageStates[0]));
         },
         // Call saveImageState once on image upload and everytime the endResize
         saveImageState(e) {
             let editor = this.editor;
-            let editorDimensions = JSON.parse(JSON.stringify(container.getBoundingClientRect()));
+            let editorDimensions = JSON.parse(JSON.stringify(editor.getBoundingClientRect()));
             let container = this.container;
             let dimensions = JSON.parse(JSON.stringify(container.getBoundingClientRect()));
+            this.width = Math.floor(dimensions['width']) -2;
+            this.height = Math.floor(dimensions['height']) -2;
             // Important: To calculate the top, take have to take the editor 
             //            top position subtracted by the container top 
             //            position to get the final top position otherwise 
             //            you get a jump from the offset of the container 
             //            top position relative to the viewport rather than 
             //            to the editor
-            // Add back the -2 taken from the saveInitialImageState
-            this.left = Math.floor(editorDimensions['left'] - dimensions['left']) + 2;
-            this.top = Math.floor(editorDimensions['top'] - dimensions['top']) + 2;
-            console.log("Save " + this.top);
+            // Add back the -1 taken from the saveInitialImageState
+            this.left = Math.floor(dimensions['left'] - editorDimensions['left']) -1;
+            this.top = Math.floor(dimensions['top'] - editorDimensions['top']) -1;
+            console.log(this.left);
             this.imageStates.push({ 'left': this.left, 'top': this.left, 'width': this.width, 'height': this.height, 'rotation': this.rotation, 'flipped': this.flipped });
             // Clear handle
             this.handle = ""; 
@@ -327,9 +321,7 @@ export default {
         },
         startResize(e) {
             let container = this.container;
-            let dimensions = JSON.parse(JSON.stringify(container.getBoundingClientRect()));
             let changeX = (-1 * (this.startingX - e.clientX));
-            let changeY = (-1 * (this.startingY - e.clientY));
 
             // Manipulations of css by handles
             switch(this.handle) {
@@ -337,59 +329,28 @@ export default {
                     container.style.width = (this.width - (-1 * changeX)) + "px";
                     container.style.height = (this.height - (-1 * changeX)) + "px";
                     // Left is sustained
-                    container.style.left = this.left;
-
-                    // Bug that causes it to jump
-                    console.log("Before " + (this.top));
-                    console.log("Before " + (this.top - changeX));
-                    container.style.top = (this.top - changeX) + "px";
-                    console.log("After " + (this.top - changeX));
+                    container.style.left = this.left + "px";
+                    container.style.top = this.top - changeX + "px";
                 break;
                 case "bottom-right-handle":
                     container.style.width = (this.width - (-1 * changeX)) + "px";
                     container.style.height = (this.height - (-1 * changeX)) + "px";
                     // Left is sustained
-                    container.style.left = this.left;
+                    container.style.left = this.left + "px";
                     // Top is sustained
-                    container.style.top = this.top;
+                    container.style.top = this.top + "px";
                 break;
                 case "bottom-left-handle":
-
-
-
-
-                    // When moving right
-                    // Width
-                    // Width can't go smaller than actual width
-                    // Increase and decrease from current width
-                    //console.log(parseInt(container.style.left) + changeX);
-                    //container.style.width = parseInt(container.style.left) + changeX >= this.handleSize ? (parseInt(container.style.left) + parseInt(container.style.width) - changeX) + "px" : container.style.width + "px";
-
-                    // Height
-
-                    // Left
-
-                    // Top
-
+                    container.style.width = (this.width - changeX) + "px";
+                    container.style.height = (this.height - changeX) + "px";
+                    container.style.left = (this.left + changeX) + "px";
+                    container.style.tio = this.top + "px";
                 break;
                 case "top-left-handle":
-                    
-
-
-
-                    // When moving right
-                    // Width
-                    // Width can't go smaller than actual width
-                    // Increase and decrease from current width
-                    //console.log(parseInt(container.style.left) + changeX);
-                    //container.style.width = parseInt(container.style.left) + changeX >= this.handleSize ? (parseInt(container.style.left) + parseInt(container.style.width) - changeX) + "px" : container.style.width + "px";
-
-                    // Height
-
-                    // Left
-
-                    // Sustain Top
-
+                    container.style.width = (this.width - changeX) + "px";
+                    container.style.height = (this.height - changeX) + "px";
+                    container.style.left = (this.left + changeX) + "px";
+                    container.style.top = (this.top + changeX) + "px";
                 break;
             }
 
@@ -446,16 +407,16 @@ export default {
             reader.onloadend = (e) => {
                 // All changes will be a copy of the original image
                 this.src = e.target.result;
-                // Show image handles after image has loaded
-                this.showResizeHandles(true);
+                // Show image container
+                this.showImageContainer(true);
                 // Initialize start of stack
                 // Must be declared here because the next functions check for the length of the imageStates
                 this.imageStates = new Array();
                 
                 this.container.style.left = "50px";
                 this.container.style.top = "50px";
-                this.left = "50";
-                this.top = "50";
+                this.left = 50;
+                this.top = 50;
             }
             reader.readAsDataURL(image);
         },
