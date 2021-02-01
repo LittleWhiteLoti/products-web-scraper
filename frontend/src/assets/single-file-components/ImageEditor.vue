@@ -279,14 +279,14 @@ export default {
             // Values are used when repainting and should only be saved at the end of image state
             this.width = Math.floor(dimensions['width']) -2;
             this.height = Math.floor(dimensions['height']) -2;
-            this.left = 0;
-            this.top = 0;
+            //this.left = 0;
+            //this.top = 0;
 
             // Initialize inline css values to prevent NaN but never save
             container.style.width = dimensions['width'] -2 + "px";
             container.style.height = dimensions['height'] -2 + "px";
-            container.style.left = "0px";
-            container.style.top = "0px";
+            //container.style.left = "0px";
+            //container.style.top = "0px";
 
             // Declare initial transformations
             this.rotation = 0;
