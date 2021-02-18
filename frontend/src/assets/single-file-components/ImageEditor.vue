@@ -276,7 +276,7 @@ export default {
             let dimensions = JSON.parse(JSON.stringify(container.getBoundingClientRect()));
 
             // Note: Never apply styles to image because it is the full width and height of the container
-            // Values are used when repainting and should only be saved at the end of image state
+            // Note: Values are used when repainting and should only be saved at the end of image state
             this.width = Math.floor(dimensions['width']) -2;
             this.height = Math.floor(dimensions['height']) -2;
             //this.left = 0;
@@ -310,10 +310,8 @@ export default {
             //            you get a jump from the offset of the container 
             //            top position relative to the viewport rather than 
             //            to the editor
-            // Add back the -1 taken from the saveInitialImageState
-            this.left = Math.floor(dimensions['left'] - editorDimensions['left']) -1;
-            this.top = Math.floor(dimensions['top'] - editorDimensions['top']) -1;
-            console.log(this.left);
+            this.left = Math.floor(dimensions['left'] - editorDimensions['left']);
+            this.top = Math.floor(dimensions['top'] - editorDimensions['top']);
             this.imageStates.push({ 'left': this.left, 'top': this.left, 'width': this.width, 'height': this.height, 'rotation': this.rotation, 'flipped': this.flipped });
             // Clear handle
             this.handle = ""; 
@@ -321,16 +319,22 @@ export default {
         },
         startResize(e) {
             let container = this.container;
+            // Because container.style.width could be undefined on first run, use dimensions
+            // let dimensions = JSON.parse(JSON.stringify(container.getBoundingClientRect()));
+
             let changeX = (-1 * (this.startingX - e.clientX));
+            //let changeY = (-1 * (this.startingY - e.clientY));
 
             // Manipulations of css by handles
             switch(this.handle) {
                 case "top-right-handle":
-                    container.style.width = (this.width - (-1 * changeX)) + "px";
-                    container.style.height = (this.height - (-1 * changeX)) + "px";
-                    // Left is sustained
-                    container.style.left = this.left + "px";
-                    container.style.top = this.top - changeX + "px";
+                    if((this.width + changeX) > (this.handleSize) && (this.height + changeX) > this.handleSize) {
+                        container.style.width = (this.width - (-1 * changeX)) + "px";
+                        container.style.height = (this.height - (-1 * changeX)) + "px";
+                        // Left is sustained
+                        container.style.left = this.left + "px";
+                        container.style.top = this.top - changeX + "px";
+                    }
                 break;
                 case "bottom-right-handle":
                     container.style.width = (this.width - (-1 * changeX)) + "px";
@@ -386,11 +390,38 @@ export default {
             // Save final state once image is done resizing
             this.saveImageState();
         },
-        startMovingImage(e) {
+        startMove(e) {
+            let container = this.container;
 
+            let changeX = (-1 * (this.startingX - e.clientX));
+            let changeY = (-1 * (this.startingY - e.clientY));
+
+            console.log(changeX);
+
+            container.style.left = this.left + changeX + "px";
+            container.style.top = this.top + changeY + "px";
+        },
+        startMovingImage(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            // If image states length is than 0, set initial state
+            this.imageStates.length == 0 ? this.saveInitialImageState() : "";
+
+            // !important: Save the starting x and y for doing calculations of transformation
+            this.startingX = e.clientX;
+            this.startingY = e.clientY;
+
+            this.on(document, 'mousemove', this.startMove);
+            this.on(document, 'mouseup', this.endMovingImage);
         },
         endMovingImage(e) {
+            e.stopPropagation();
 
+            this.off(document, 'mousemove', this.startMove);
+            this.off(document, 'mouseup', this.endMovingImage);
+            
+            // Save final state once image is done moving
+            this.saveImageState();
         },
         uploadImage(e) {
             // Both of these reference the same element
@@ -412,7 +443,6 @@ export default {
                 // Initialize start of stack
                 // Must be declared here because the next functions check for the length of the imageStates
                 this.imageStates = new Array();
-                
                 this.container.style.left = "50px";
                 this.container.style.top = "50px";
                 this.left = 50;
